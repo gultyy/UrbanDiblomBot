@@ -2,23 +2,27 @@ import asyncio
 from create_bot import bot, dp, admins, set_commands
 from handlers.admin_panel import admin_router
 from handlers.user_panel import user_router
-# from work_time.time_func import send_time_msg
-
-
-
-# Функция, которая выполнится когда бот запустится
+from db_handler.db_funk import get_all_polls
 
 async def start_bot():
+    """
+
+    :return:
+    """
     await set_commands()
-    # count_users = await get_all_users(count=True)
+    count_polls = await get_all_polls(count=True)
     try:
         for admin_id in admins:
-            await bot.send_message(admin_id, f'Я запущен🥳. Сейчас в базе данных <b>{0}</b> опросов.')
+            await bot.send_message(admin_id, f'Pulsepoll запущен. Сейчас в базе данных <b>{count_polls}</b> опросов.')
     except:
         pass
 
 # Функция, которая выполнится когда бот завершит свою работу
 async def stop_bot():
+    """
+
+    :return:
+    """
     try:
         for admin_id in admins:
             await bot.send_message(admin_id, 'Бот остановлен. За что?😔')

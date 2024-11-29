@@ -4,10 +4,9 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand, BotCommandScopeDefault, InputFile
 from asyncpg_lite import DatabaseManager
-
 from decouple import config
 
-# получаем список администраторов из .env
+#Admin list of pulsepoll_bot
 admins = [int(admin_id) for admin_id in config('ADMINS').split(',')]
 
 db_manager = DatabaseManager(db_url=config('PG_LINK'), deletion_password=config('ROOT_PASS'))
@@ -15,8 +14,11 @@ db_manager = DatabaseManager(db_url=config('PG_LINK'), deletion_password=config(
 bot = Bot(token=config('TOKEN'), default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher(storage=MemoryStorage())
 
-# Функция, которая настроит командное меню (дефолтное для всех пользователей)
 async def set_commands():
+    """
+
+    :return:
+    """
     commands = [BotCommand(command='start', description='Старт'),
                 BotCommand(command='take_poll', description='Пройти опрос'),
                 BotCommand(command='stats', description='Статистика')

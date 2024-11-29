@@ -1,16 +1,16 @@
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, CallbackQuery, Poll
-from create_bot import admins
-from keyboards.kbs import admin_kb, save_poll_kb, main_kb, all_polls_kb, poll_manage_kb, all_polls_menu_kb, delete_poll_kb
+from aiogram.types import Message, CallbackQuery, Poll, FSInputFile
+from create_bot import admins, bot
+from keyboards.kbs import (admin_kb, save_poll_kb, main_kb, all_polls_kb, poll_manage_kb, all_polls_menu_kb,
+                           delete_poll_kb)
 from keyboards.kbs_cfg import *
-from create_bot import bot
 from aiogram.filters.state import State, StatesGroup
 from typing import List, Dict
 from db_handler.db_funk import *
 from utils.my_utils import *
 
-
+#Admin router for poll management
 admin_router = Router()
 
 class CreatePoll(StatesGroup):
@@ -21,11 +21,12 @@ class CreatePoll(StatesGroup):
 
 
 
-@admin_router.message((F.text.endswith(MAIN_MENU_BTN_TXT)) & (F.from_user.id.in_(admins)))
+@admin_router.message((F.text.endswith(MAIN_MENU_TEXT_BTN)) & (F.from_user.id.in_(admins)))
 async def main_menu(message: Message):
     await message.answer('Главное меню', reply_markup=main_kb(message.from_user.id))
 
-@admin_router.message((F.text.endswith(ADMIN_PANEL_TXT_BUT) | F.text.endswith(POLL_BACK_TXT_BUT)) & (F.from_user.id.in_(admins)))
+@admin_router.message((F.text.endswith(ADMIN_PANEL_TEXT_BTN) | F.text.endswith(POLL_BACK_TEXT_BTN)) &
+                      F.from_user.id.in_(admins))
 async def admin_panel(message: Message, state: FSMContext):
     try:
         polls_menu_msg: Message = (await state.get_data())['polls_menu_msg']
@@ -38,9 +39,10 @@ async def admin_panel(message: Message, state: FSMContext):
 
 
 # admin kb handlers
-@admin_router.message((F.text.endswith(ACTIVE_PALLS_TXT_BUT) | F.text.endswith(NOT_ACTIVE_PALLS_TXT_BUT)) & (F.from_user.id.in_(admins)))
+@admin_router.message((F.text.endswith(ACTIVE_PALLS_TEXT_BTN) | F.text.endswith(NOT_ACTIVE_PALLS_TEXT_BTN)) &
+                      F.from_user.id.in_(admins))
 async def active_polls(message: Message, state: FSMContext):
-    if message.text.endswith(ACTIVE_PALLS_TXT_BUT):
+    if message.text.endswith(ACTIVE_PALLS_TEXT_BTN):
         is_active = True
         active_text = 'Активные'
         active_text_if_not = 'активных'
@@ -55,13 +57,14 @@ async def active_polls(message: Message, state: FSMContext):
             poll_info[poll['name']] = int(poll['id'])
         # Change markup keyboard and sent new inline keyboard
         polls_menu_msg = await message.answer(f'{active_text} опросы', reply_markup=all_polls_menu_kb())
-        polls_kb_msg = await message.answer(f'Количество: {len(polls)}', reply_markup=all_polls_kb(poll_info, True))
+        polls_kb_msg = await message.answer(f'Количество: {len(polls)}',
+                                            reply_markup=all_polls_kb(poll_info,True))
         await state.update_data(polls_menu_msg=polls_menu_msg)
         await state.update_data(polls_kb_msg=polls_kb_msg)
     else:
         await message.answer(f'Нет {active_text_if_not} опросов', reply_markup=admin_kb())
 
-@admin_router.message((F.text.endswith(CREATE_POLL_TXT_BUT)) & (F.from_user.id.in_(admins)))
+@admin_router.message((F.text.endswith(CREATE_POLL_TEXT_BTN)) & (F.from_user.id.in_(admins)))
 async def create_poll(message: Message, state: FSMContext):
     await message.answer('Введите имя опроса')
     await state.set_state(CreatePoll.name)
@@ -92,7 +95,7 @@ async def capture_polls(message: Message, state: FSMContext):
     await message.answer('Добавьте следующий опрос или сохраните', reply_markup=save_poll_kb())
 
 
-@admin_router.message(F.text.endswith(SAVE_TEXT_BUT), CreatePoll.polls)
+@admin_router.message(F.text.endswith(SAVE_TEXT_BTN), CreatePoll.polls)
 async def save_poll(message: Message, state: FSMContext):
     data = await state.get_data()
     await message.answer(f'Имя опроса: {data['name']}')
@@ -148,7 +151,8 @@ async def return_all_polls(is_active: bool, call: CallbackQuery,state: FSMContex
         poll_info: Dict[str: int] = {}
         for poll in polls:
             poll_info[poll['name']] = int(poll['id'])
-        await call.message.edit_text(f'Количество: {len(polls)}', reply_markup=all_polls_kb(poll_info, True))
+        await call.message.edit_text(f'Количество: {len(polls)}',
+                                     reply_markup=all_polls_kb(poll_info, True))
     else:
         if is_active:
             active_text = 'активных'
@@ -171,12 +175,12 @@ async def poll_manage__handler(call: CallbackQuery, state: FSMContext):
     poll = await get_poll_by_id(poll_id)
     await delete_poll_by_id(poll_id)
     await call.answer(text=f'Опрос {poll['name']} удален', show_alert=True)
-    # is_active = poll['is_active']
     is_active = (await state.get_data())['polls_activity']
     await return_all_polls(is_active, call, state)
 
 
-@admin_router.callback_query((F.data.endswith('poll_activate') | F.data.endswith('poll_deactivate')) & F.from_user.id.in_(admins))
+@admin_router.callback_query((F.data.endswith('poll_activate') | F.data.endswith('poll_deactivate')) &
+                             F.from_user.id.in_(admins))
 async def poll_manage__handler(call: CallbackQuery, state: FSMContext):
     poll_id = (await state.get_data())['current_poll_id']
     poll = await get_poll_by_id(poll_id)
@@ -192,9 +196,13 @@ async def poll_manage__handler(call: CallbackQuery, state: FSMContext):
     await call.message.edit_text(poll_info, reply_markup=poll_manage_kb(poll['is_active']))
 
 @admin_router.callback_query(F.data.startswith('get_poll_results') & F.from_user.id.in_(admins))
-async def poll_manage__handler(call: CallbackQuery):
-    poll = await get_poll_by_id(20)
-    create_result_tbl(poll)
+async def poll_manage__handler(call: CallbackQuery, state: FSMContext):
+    poll_id = (await state.get_data())['current_poll_id']
+    poll = await get_poll_by_id(poll_id)
+    filename = create_result_tbl(poll)
+    f = FSInputFile('.results/Тест.xlsx')
+    await call.message.answer_document(f)
+    delete_result_tbl(filename)
     await call.answer()
 
 @admin_router.callback_query(F.data.startswith('back_all_polls_') & F.from_user.id.in_(admins))
