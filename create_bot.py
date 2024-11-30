@@ -9,19 +9,21 @@ from decouple import config
 # Admin list of pulsepoll_bot
 admins = [int(admin_id) for admin_id in config('ADMINS').split(',')]
 
+# Database manager instance
 db_manager = DatabaseManager(db_url=config('PG_LINK'),
                              deletion_password=config('ROOT_PASS'))
 
+# Bot instance
 bot = Bot(token=config('TOKEN'),
           default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
+# Dispatcher instance
 dp = Dispatcher(storage=MemoryStorage())
 
 
 async def set_commands():
     """
-
-    :return:
+    Sets commands for the start menu.
     """
     commands = [BotCommand(command='start', description='Старт'),
                 BotCommand(command='take_poll', description='Пройти опрос'),

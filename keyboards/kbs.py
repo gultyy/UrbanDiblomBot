@@ -2,10 +2,16 @@ from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from aiogram.utils.keyboard import (InlineKeyboardBuilder,
                                     InlineKeyboardButton, InlineKeyboardMarkup)
 from create_bot import admins
-import kbs_cfg as cfg
+import keyboards.kbs_cfg as cfg
 
 
 def main_kb(user_telegram_id: int) -> ReplyKeyboardMarkup:
+    """
+    Create a main menu keyboard.
+
+    :param user_telegram_id: User telegram ID.
+    :return: Main menu keyboard.
+    """
     kb_list = []
     if user_telegram_id in admins:
         kb_list.append([KeyboardButton(text=cfg.ADMIN_PANEL_TEXT_BTN)])
@@ -18,6 +24,11 @@ def main_kb(user_telegram_id: int) -> ReplyKeyboardMarkup:
 
 
 def admin_kb() -> ReplyKeyboardMarkup:
+    """
+    Create an admin panel keyboard.
+
+    :return: Admin panel keyboard.
+    """
     kb_list = [
         [KeyboardButton(text=cfg.ACTIVE_PALLS_TEXT_BTN)],
         [KeyboardButton(text=cfg.NOT_ACTIVE_PALLS_TEXT_BTN)],
@@ -33,6 +44,11 @@ def admin_kb() -> ReplyKeyboardMarkup:
 
 
 def save_poll_kb() -> ReplyKeyboardMarkup:
+    """
+    Create a keyboard to save the poll.
+
+    :return: Save poll keyboard.
+    """
     return ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=cfg.SAVE_TEXT_BTN)]],
         resize_keyboard=True,
@@ -41,14 +57,27 @@ def save_poll_kb() -> ReplyKeyboardMarkup:
 
 
 def all_polls_menu_kb() -> ReplyKeyboardMarkup:
+    """
+    Create a keyboard that allows you to return to the admin panel.
+
+    :return: Return to the admin panel keyboard.
+    """
     return ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=cfg.ADMIN_PANEL_TEXT_BTN)]],
-        resize_keyboard=True,
-        input_field_placeholder='Введите название опроса для поиска'
+        resize_keyboard=True
     )
 
 
 def all_polls_kb(buttons: {str: int}, admin: bool) -> InlineKeyboardMarkup:
+    """
+    Create a keyboard that contains all available polls for a user or admin.
+
+    :param buttons: Dictionary of buttons that
+    contains the name and ID of the poll.
+    :param admin: True - create keyboard for admin.
+    False - create admin for user.
+    :return:
+    """
     if not admin:
         cb_data = 'user_poll_id_'
     else:
@@ -63,6 +92,13 @@ def all_polls_kb(buttons: {str: int}, admin: bool) -> InlineKeyboardMarkup:
 
 
 def poll_manage_kb(is_active: bool) -> InlineKeyboardMarkup:
+    """
+    Create a keyboard for admin to manage polls.
+
+    :param is_active: True - create active polls keyboard.
+                      False - create inactive polls keyboard.
+    :return: Active or inactive polls keyboard.
+    """
     if is_active:
         text = cfg.DEACTIVATE_TEXT_BTN
         cb_data = 'active'
@@ -78,13 +114,19 @@ def poll_manage_kb(is_active: bool) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text=cfg.GET_RESULTS_TEXT_BTN,
                               callback_data='get_poll_results')],
         [InlineKeyboardButton(text=cfg.POLL_BACK_TEXT_BTN,
-                              callback_data=f'back_all_polls_{cb_data}')],
+                              callback_data=f'back_all_polls_{cb_data}')]
     ]
 
     return InlineKeyboardMarkup(inline_keyboard=kb_list)
 
 
 def delete_poll_kb(poll_id: int) -> InlineKeyboardMarkup:
+    """
+    Create a poll deletion confirmation keyboard.
+
+    :param poll_id: ID of the poll to be deleted.
+    :return: Deletion confirmation keyboard.
+    """
     kb_list = [
         [InlineKeyboardButton(text=cfg.DELETE_YES_TEXT_BTN,
                               callback_data='delete_poll_yes')],
@@ -95,6 +137,11 @@ def delete_poll_kb(poll_id: int) -> InlineKeyboardMarkup:
 
 
 def user_poll_kb() -> InlineKeyboardMarkup:
+    """
+    Create a keyboard action for the user.
+
+    :return: Action for the user keyboard.
+    """
     kb_list = [
         [InlineKeyboardButton(text=cfg.TAKE_POLL_TEXT_BTN,
                               callback_data='taking_poll')],

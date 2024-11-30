@@ -7,8 +7,8 @@ from db_handler.db_funk import get_all_polls
 
 async def start_bot():
     """
-
-    :return:
+    Notifies all admins about the startup.
+    Called when the bot are startuped.
     """
     await set_commands()
     count_polls = await get_all_polls(count=True)
@@ -18,23 +18,26 @@ async def start_bot():
                 admin_id,
                 'Pulsepoll запущен. '
                 f'Сейчас в базе данных <b>{count_polls}</b> опросов.')
-    except:
+    except Exception:
         pass
 
 
 async def stop_bot():
     """
-
-    :return:
+    Notifies all admins about the bot's shutdown.
+    Called when the bot is stopped.
     """
     try:
         for admin_id in admins:
             await bot.send_message(admin_id, 'Pulsepoll остановлен.')
-    except:
+    except Exception:
         pass
 
 
 async def main():
+    """
+    The main function for starting the bot.
+    """
     dp.include_router(admin_router)
     dp.include_router(user_router)
 
@@ -48,5 +51,6 @@ async def main():
     finally:
         await bot.session.close()
 
+# Run bot
 if __name__ == "__main__":
     asyncio.run(main())

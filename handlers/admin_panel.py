@@ -19,19 +19,27 @@ admin_router = Router()
 
 
 class CreatePoll(StatesGroup):
+    """
+    States for the Create poll FSM.
+    """
+    # Creating name state
     name = State()
+    # Creating description state
     description = State()
+    # Creating type state
     type = State()
+    # Creating polls state
     polls = State()
 
 
 @admin_router.message((F.text.endswith(cfg.MAIN_MENU_TEXT_BTN))
                       & (F.from_user.id.in_(admins)))
-async def main_menu(message: Message):
+async def main_menu(message: Message) -> None:
     """
+    Main menu handler for admin.
+    Sends the main menu keyboard to the chat.
 
-    :param message:
-    :return:
+    :param message: Message sent by the user.
     """
     await message.answer(text='Главное меню',
                          reply_markup=main_kb(message.from_user.id))
@@ -40,12 +48,12 @@ async def main_menu(message: Message):
 @admin_router.message((F.text.endswith(cfg.ADMIN_PANEL_TEXT_BTN)
                        | F.text.endswith(cfg.POLL_BACK_TEXT_BTN))
                       & F.from_user.id.in_(admins))
-async def admin_panel(message: Message, state: FSMContext):
+async def admin_panel(message: Message, state: FSMContext) -> None:
     """
+    A handler that sends to the chat keyboard to manage polls.
 
-    :param message:
-    :param state:
-    :return:
+    :param message: Message sent by the user.
+    :param state: Data that is in the storage.
     """
     try:
         polls_menu_msg: Message = (await state.get_data())['polls_menu_msg']
@@ -53,21 +61,23 @@ async def admin_panel(message: Message, state: FSMContext):
         await bot.delete_message(polls_menu_msg.chat.id,
                                  polls_menu_msg.message_id)
         await bot.delete_message(polls_kb_msg.chat.id, polls_kb_msg.message_id)
-    finally:
-        await message.answer(text='Панель управления опросами',
-                             reply_markup=admin_kb())
+    except Exception:
+        pass
+    await message.answer(text='Панель управления опросами',
+                         reply_markup=admin_kb())
 
 
 # admin kb handlers
 @admin_router.message((F.text.endswith(cfg.ACTIVE_PALLS_TEXT_BTN)
                        | F.text.endswith(cfg.NOT_ACTIVE_PALLS_TEXT_BTN))
                       & F.from_user.id.in_(admins))
-async def active_polls(message: Message, state: FSMContext):
+async def active_polls(message: Message, state: FSMContext) -> None:
     """
+    Handler that sends a keyboard with
+    active/inactive polls to the chat.
 
-    :param message:
-    :param state:
-    :return:
+    :param message: Message sent by the user.
+    :param state: Data that is in the storage.
     """
     if message.text.endswith(cfg.ACTIVE_PALLS_TEXT_BTN):
         is_active = True
@@ -98,12 +108,12 @@ async def active_polls(message: Message, state: FSMContext):
 
 @admin_router.message((F.text.endswith(cfg.CREATE_POLL_TEXT_BTN))
                       & (F.from_user.id.in_(admins)))
-async def create_poll(message: Message, state: FSMContext):
+async def create_poll(message: Message, state: FSMContext) -> None:
     """
+    Poll creation start handler.
 
-    :param message:
-    :param state:
-    :return:
+    :param message: Message sent by the user.
+    :param state: Data that is in the storage.
     """
     await message.answer('Введите имя опроса')
     await state.set_state(CreatePoll.name)
@@ -111,12 +121,12 @@ async def create_poll(message: Message, state: FSMContext):
 
 # Create Poll FSM handlers
 @admin_router.message(F.text, CreatePoll.name)
-async def capture_poll_name(message: Message, state: FSMContext):
+async def capture_poll_name(message: Message, state: FSMContext) -> None:
     """
+    Handler that captures the poll name.
 
-    :param message:
-    :param state:
-    :return:
+    :param message: Message sent by the user.
+    :param state: Data that is in the storage.
     """
     await state.update_data(name=message.text)
     await message.answer('Введите описание опроса:')
@@ -124,12 +134,13 @@ async def capture_poll_name(message: Message, state: FSMContext):
 
 
 @admin_router.message(F.text, CreatePoll.description)
-async def capture_poll_description(message: Message, state: FSMContext):
+async def capture_poll_description(message: Message,
+                                   state: FSMContext) -> None:
     """
+    Handler that captures the poll description.
 
-    :param message:
-    :param state:
-    :return:
+    :param message: Message sent by the user.
+    :param state: Data that is in the storage.
     """
     await state.update_data(description=message.text)
     await message.answer('Создайте опрос и отправьте:')
@@ -139,12 +150,12 @@ async def capture_poll_description(message: Message, state: FSMContext):
 
 
 @admin_router.message(F.poll, CreatePoll.polls)
-async def capture_polls(message: Message, state: FSMContext):
+async def capture_polls(message: Message, state: FSMContext) -> None:
     """
+    Handler that captures the all polls.
 
-    :param message:
-    :param state:
-    :return:
+    :param message: Message sent by the user.
+    :param state: Data that is in the storage.
     """
     poll = message.poll
     data = await state.get_data()
@@ -157,12 +168,12 @@ async def capture_polls(message: Message, state: FSMContext):
 
 
 @admin_router.message(F.text.endswith(cfg.SAVE_TEXT_BTN), CreatePoll.polls)
-async def save_poll(message: Message, state: FSMContext):
+async def save_poll(message: Message, state: FSMContext) -> None:
     """
+    Handler that saves the poll to the database.
 
-    :param message:
-    :param state:
-    :return:
+    :param message: Message sent by the user.
+    :param state: Data that is in the storage.
     """
     data = await state.get_data()
     await message.answer(f'Имя опроса: {data['name']}')
@@ -194,12 +205,12 @@ async def save_poll(message: Message, state: FSMContext):
 # all polls handlers
 @admin_router.callback_query(F.data.startswith('poll_id_')
                              & F.from_user.id.in_(admins))
-async def poll_manage_handler(call: CallbackQuery, state: FSMContext):
+async def poll_manage_handler(call: CallbackQuery, state: FSMContext) -> None:
     """
+    Handler that sends the keyboard to the chat to manage the selected poll.
 
-    :param call:
-    :param state:
-    :return:
+    :param call: Response data from selected poll button .
+    :param state: Data that is in the storage.
     """
     poll_id: int = int(call.data.replace('poll_id_', ''))
     poll = await get_poll_by_id(poll_id)
@@ -216,12 +227,14 @@ async def poll_manage_handler(call: CallbackQuery, state: FSMContext):
 
 @admin_router.callback_query(F.data.endswith('poll_delete')
                              & F.from_user.id.in_(admins))
-async def delete_poll_manage_handler(call: CallbackQuery, state: FSMContext):
+async def delete_poll_manage_handler(call: CallbackQuery,
+                                     state: FSMContext) -> None:
     """
+    Handler that sends the keyboard to the chat
+    to confirm the deletion of the selected poll.
 
-    :param call:
-    :param state:
-    :return:
+    :param call: Response data from button "Удалить".
+    :param state: Data that is in the storage.
     """
     poll_id = (await state.get_data())['current_poll_id']
     await call.message.edit_text(
@@ -231,13 +244,14 @@ async def delete_poll_manage_handler(call: CallbackQuery, state: FSMContext):
 
 
 async def bact_to_all_polls(is_active: bool, call: CallbackQuery,
-                            state: FSMContext):
+                            state: FSMContext) -> None:
     """
+    Handler that sends a keyboard with all active/inactive polls to the chat.
 
-    :param is_active:
-    :param call:
-    :param state:
-    :return:
+    :param is_active: True - active polls.
+    False - inactive polls.
+    :param call: Response data from button "Назад".
+    :param state: Data that is in the storage.
     """
     polls = await get_all_activity_polls(is_active=is_active)
     if polls:
@@ -269,12 +283,12 @@ async def bact_to_all_polls(is_active: bool, call: CallbackQuery,
 
 @admin_router.callback_query(F.data.endswith('delete_poll_yes')
                              & F.from_user.id.in_(admins))
-async def delete_poll_handler(call: CallbackQuery, state: FSMContext):
+async def delete_poll_handler(call: CallbackQuery, state: FSMContext) -> None:
     """
+    Handler that removes the poll from the database.
 
-    :param call:
-    :param state:
-    :return:
+    :param call: Response data from button "Да".
+    :param state: Data that is in the storage.
     """
     poll_id = (await state.get_data())['current_poll_id']
     poll = await get_poll_by_id(poll_id)
@@ -289,10 +303,10 @@ async def delete_poll_handler(call: CallbackQuery, state: FSMContext):
                              & F.from_user.id.in_(admins))
 async def activate_poll_handler(call: CallbackQuery, state: FSMContext):
     """
+    Handler that activates/deactivates the selected poll.
 
-    :param call:
-    :param state:
-    :return:
+    :param call: Response data from button "Активировать"/"Деактивировать".
+    :param state: Data that is in the storage.
     """
     poll_id = (await state.get_data())['current_poll_id']
     poll = await get_poll_by_id(poll_id)
@@ -314,12 +328,14 @@ async def activate_poll_handler(call: CallbackQuery, state: FSMContext):
 
 @admin_router.callback_query(F.data.startswith('get_poll_results')
                              & F.from_user.id.in_(admins))
-async def get_poll_results_handler(call: CallbackQuery, state: FSMContext):
+async def get_poll_results_handler(call: CallbackQuery,
+                                   state: FSMContext) -> None:
     """
+    Handler that sends an Excel file with the results
+    of the selected poll to the chat.
 
-    :param call:
-    :param state:
-    :return:
+    :param call: Response data from button "Результаты".
+    :param state: Data that is in the storage.
     """
     poll_id = (await state.get_data())['current_poll_id']
     poll = await get_poll_by_id(poll_id)
@@ -332,12 +348,12 @@ async def get_poll_results_handler(call: CallbackQuery, state: FSMContext):
 
 @admin_router.callback_query(F.data.startswith('back_all_polls_')
                              & F.from_user.id.in_(admins))
-async def back_all_polls(call: CallbackQuery, state: FSMContext):
+async def back_all_polls(call: CallbackQuery, state: FSMContext) -> None:
     """
+    Handler to return to all active/inactive polls.
 
-    :param call:
-    :param state:
-    :return:
+    :param call: Response data from button "Назад".
+    :param state: Data that is in the storage.
     """
     is_active = (await state.get_data())['polls_activity']
     await bact_to_all_polls(is_active, call, state)
