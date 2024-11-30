@@ -2,6 +2,7 @@ from typing import List, Dict, Any
 import pandas as pd
 import os
 
+
 def list_str_to_string(string_list: List[str]) -> str:
     """
 
@@ -9,6 +10,7 @@ def list_str_to_string(string_list: List[str]) -> str:
     :return:
     """
     return ','.join(string_list)
+
 
 def string_to_list(input_string: str) -> List[str]:
     """
@@ -18,6 +20,7 @@ def string_to_list(input_string: str) -> List[str]:
     """
     return input_string.split(',')
 
+
 def nested_list_str_to_string(nested_list: List[List[str]]):
     """
 
@@ -25,6 +28,7 @@ def nested_list_str_to_string(nested_list: List[List[str]]):
     :return:
     """
     return '|'.join([','.join(group) for group in nested_list])
+
 
 def string_to_nested_list_str(input_string: str) -> List[List[str]]:
     """
@@ -34,6 +38,7 @@ def string_to_nested_list_str(input_string: str) -> List[List[str]]:
     """
     return [group.split(',') for group in input_string.split('|')]
 
+
 def nested_list_int_to_string(nested_list: List[List[int]]) -> str:
     """
 
@@ -42,6 +47,7 @@ def nested_list_int_to_string(nested_list: List[List[int]]) -> str:
     """
     return '|'.join([','.join(map(str, group)) for group in nested_list])
 
+
 def string_to_nested_list_int(input_string: str) -> List[List[int]]:
     """
 
@@ -49,6 +55,7 @@ def string_to_nested_list_int(input_string: str) -> List[List[int]]:
     :return:
     """
     return [list(map(int, group.split(','))) for group in input_string.split('|')]
+
 
 def create_result_tbl(poll: Dict[str, Any]) -> str:
     """
@@ -71,8 +78,11 @@ def create_result_tbl(poll: Dict[str, Any]) -> str:
         all_tables.append(df)
         all_tables.append(pd.DataFrame([['', '']]))
     final_df = pd.concat(all_tables, ignore_index=True)
-    final_df.to_excel(filename, sheet_name='Combined_Tables', index=False, header=False)
+    final_df.to_excel(
+        filename, sheet_name='Combined_Tables',
+        index=False, header=False)
     return filename
+
 
 def delete_result_tbl(filename: str):
     """
@@ -82,4 +92,3 @@ def delete_result_tbl(filename: str):
     """
     if os.path.exists(filename):
         os.remove(filename)
-

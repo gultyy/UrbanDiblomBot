@@ -4,6 +4,7 @@ from handlers.admin_panel import admin_router
 from handlers.user_panel import user_router
 from db_handler.db_funk import get_all_polls
 
+
 async def start_bot():
     """
 
@@ -13,11 +14,14 @@ async def start_bot():
     count_polls = await get_all_polls(count=True)
     try:
         for admin_id in admins:
-            await bot.send_message(admin_id, f'Pulsepoll запущен. Сейчас в базе данных <b>{count_polls}</b> опросов.')
+            await bot.send_message(
+                admin_id,
+                'Pulsepoll запущен. '
+                f'Сейчас в базе данных <b>{count_polls}</b> опросов.')
     except:
         pass
 
-# Функция, которая выполнится когда бот завершит свою работу
+
 async def stop_bot():
     """
 
@@ -25,9 +29,10 @@ async def stop_bot():
     """
     try:
         for admin_id in admins:
-            await bot.send_message(admin_id, 'Бот остановлен. За что?😔')
+            await bot.send_message(admin_id, 'Pulsepoll остановлен.')
     except:
         pass
+
 
 async def main():
     dp.include_router(admin_router)
@@ -38,7 +43,8 @@ async def main():
 
     try:
         await bot.delete_webhook(drop_pending_updates=True)
-        await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
+        await dp.start_polling(bot,
+                               allowed_updates=dp.resolve_used_update_types())
     finally:
         await bot.session.close()
 

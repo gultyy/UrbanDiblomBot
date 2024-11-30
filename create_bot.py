@@ -2,17 +2,21 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import BotCommand, BotCommandScopeDefault, InputFile
+from aiogram.types import BotCommand, BotCommandScopeDefault
 from asyncpg_lite import DatabaseManager
 from decouple import config
 
-#Admin list of pulsepoll_bot
+# Admin list of pulsepoll_bot
 admins = [int(admin_id) for admin_id in config('ADMINS').split(',')]
 
-db_manager = DatabaseManager(db_url=config('PG_LINK'), deletion_password=config('ROOT_PASS'))
+db_manager = DatabaseManager(db_url=config('PG_LINK'),
+                             deletion_password=config('ROOT_PASS'))
 
-bot = Bot(token=config('TOKEN'), default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+bot = Bot(token=config('TOKEN'),
+          default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+
 dp = Dispatcher(storage=MemoryStorage())
+
 
 async def set_commands():
     """
