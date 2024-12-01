@@ -9,6 +9,7 @@ from db_handler.db_funk import (get_all_activity_polls, get_poll_by_id,
 import utils.my_utils as ut
 from aiogram.filters.state import StatesGroup, State
 
+
 # User router for taking polls
 user_router = Router()
 
@@ -154,8 +155,10 @@ async def handle_poll_answer(poll_answer: PollAnswer,
         await state.update_data(poll_mes=poll_mes)
         await state.update_data(poll_index=poll_index)
     except Exception:
+        user_poll['respondents_number'] += user_poll['respondents_number']
         await update_poll(user_poll)
         await state.clear()
         await bot.send_message(chat_id=poll_mes.chat.id,
                                text='Опрос завершен!')
         await take_poll_handler(poll_mes, state)
+

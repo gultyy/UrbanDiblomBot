@@ -339,10 +339,11 @@ async def get_poll_results_handler(call: CallbackQuery,
     """
     poll_id = (await state.get_data())['current_poll_id']
     poll = await get_poll_by_id(poll_id)
-    filename = create_result_tbl(poll)
-    f = FSInputFile('.results/Тест.xlsx')
-    await call.message.answer_document(f)
-    delete_result_tbl(filename)
+    filepaths = create_result_tbl(poll)
+    for filepath in filepaths:
+        f = FSInputFile(filepath)
+        await call.message.answer_document(f)
+    delete_result_tbl(filepaths)
     await call.answer()
 
 

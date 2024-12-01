@@ -1,7 +1,8 @@
 from typing import List, Dict, Any
 import pandas as pd
 import os
-
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 def list_str_to_string(string_list: List[str]) -> str:
     """
@@ -78,7 +79,7 @@ def string_to_nested_list_int(input_string: str) -> List[List[int]]:
             for group in input_string.split('|')]
 
 
-def create_result_tbl(poll: Dict[str, Any]) -> str:
+def create_result_tbl(poll: Dict[str, Any]) -> List[str]:
     """
     Create a table of poll results and save it to an Excel file.
 
@@ -89,7 +90,8 @@ def create_result_tbl(poll: Dict[str, Any]) -> str:
     d = os.path.join(os.getcwd(), '.results')
     if not os.path.exists(d):
         os.makedirs(d)
-    filepath = os.path.join(d, f'{poll["name"]}.xlsx')
+    tbl_filepath = os.path.join(d, f'{poll["name"]}.xlsx')
+    visual_filepath = os.path.join(d, f'{poll["name"]}.png')
     questions = string_to_list(poll['questions'])
     options = string_to_nested_list_str(poll['options'])
     results = string_to_nested_list_int(poll['results'])
@@ -104,16 +106,29 @@ def create_result_tbl(poll: Dict[str, Any]) -> str:
     final_df = pd.concat(all_tables, ignore_index=True)
     # Write table to Excel file.
     final_df.to_excel(
-        filepath, sheet_name='Combined_Tables',
+        tbl_filepath, sheet_name='Combined_Tables',
         index=False, header=False)
-    return filepath
+    # Create histograms
+    fig = make_subplots(rows=1, cols=len(questions), subplot_titles=questions)
+    for i, (question, opt, res) in enumerate(zip(questions, options, results)):
+        fig.add_trace(go.Bar(x=opt, y=res, name=f'{question}'), row=1, col=i + 1)
+    fig.update_layout(
+        title='Результаты опросов',
+        xaxis_title='Варианты',
+        yaxis_title='Количество голосов',
+        template='plotly_white'
+    )
+    # Write visualization to file
+    fig.write_image(visual_filepath)
+    return [tbl_filepath, visual_filepath]
 
 
-def delete_result_tbl(filepath: str):
+def delete_result_tbl(filepaths: List[str]):
     """
-    Delete existing file.
+    Delete existing files.
 
-    :param filepath: Path of the file to be deleted.
+    :param filepaths: Paths of the files to be deleted.
     """
-    if os.path.exists(filepath):
-        os.remove(filepath)
+    for filepath in filepaths:
+        if os.path.exists(filepath):
+            os.remove(filepath)
